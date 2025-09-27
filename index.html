@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Savings Manager — Dashboard</title>
+
+<!-- Chart.js CDN for charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  /* ---------- Basic reset & fonts ---------- */
+  /* --- Enhanced Members Page Styles --- */
+/* Zebra striping for members table */
+/* --- Reports Page Improvements --- */
+#reportsCanvas {
+  width: 100% !important;
+  max-width: 100%;
+  height: 340px !important;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--panel-shadow);
+  margin-top: 16px;
+  display: block;
+}
+.panel-reports-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+#membersTbody tr:nth-child(even) { background: var(--soft); }
+#membersTbody tr:hover { background: #e6f6e9; transition: background 0.2s; }
+/* Style for action buttons in members table */
+#membersTbody .btn {
+  font-size: 13px;
+  padding: 6px 12px;
+  margin: 0 3px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  transition: background 0.2s;
+}
+#membersTbody .btn:hover {
+  background: #22733a;
+}
+/* Panel spacing for Members */
+.panel h2 { margin-bottom: 8px; }
+#addMemberBtn { margin-left: 8px; }
+  :root{
+    --bg:#f6faf6;
+    --card:#ffffff;
+    --accent:#2f8f4a; /* main green */
+    --muted:#94a3a1;
+    --danger:#e65a4c;
+    --surface: #f2f6f2;
+    --soft:#f9faf9;
+    --panel-shadow: 0 2px 8px rgba(18, 25, 18, 0.06);
+    --radius:12px;
+    --glass: rgba(255,255,255,0.7);
+    --width-sidebar:260px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{background:var(--bg);color:#213;line-height:1.4}
+
+  /* ---------- Layout ---------- */
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+  .sidebar{
+    width:var(--width-sidebar);
+    background:linear-gradient(180deg,#ffffff, #fbfffb);
+    border-right:1px solid #e7efea;
+    padding:28px 18px;
+    box-shadow:var(--panel-shadow);
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;margin-bottom:22px;
+  }
+  .logo{
+    width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#66b57b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;
+  }
+  .brand h1{font-size:18px;margin:0}
+  .brand p{margin:0;color:var(--muted);font-size:12px}
+
+  .nav{margin-top:18px}
+  .nav a{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;color:#2b3b33;text-decoration:none;margin-bottom:6px}
+  .nav a.active{background:#f0fff3;border-left:4px solid var(--accent);font-weight:600}
+  .badge{background:#e6f6e9;color:var(--accent);padding:4px 8px;border-radius:999px;font-size:12px;margin-left:auto}
+
+  .main{
+    flex:1;padding:24px 36px;min-width:0;
+  }
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .topbar .search{flex:1;display:flex;align-items:center;gap:12px}
+  .topbar input{width:300px;padding:10px;border-radius:10px;border:1px solid #e1e6e2;background:var(--soft)}
+
+  /* ---------- Cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:18px}
+  .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:var(--panel-shadow);min-height:80px}
+  .card h3{margin:0;font-size:14px;color:#546a5f}
+  .card .value{font-size:22px;font-weight:700;margin-top:8px}
+
+  .two-col{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+  .panel{background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--panel-shadow);}
+
+  /* Table (Members) */
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px;text-align:left;border-bottom:1px solid #f0f3f0;color:#204031}
+  th{color:var(--muted);font-weight:700;font-size:13px}
+
+  /* Buttons */
+  .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid #e6eee6;color:#1f5a33}
+  .btn.warn{background:#ffeddb;color:#7a3f00}
+
+  /* Forms */
+  .form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type="text"], input[type="number"], input[type="password"], select, textarea{
+    padding:10px;border-radius:8px;border:1px solid #e4ebe6;background:var(--soft);width:100%;
+  }
+  textarea{min-height:120px}
+
+  /* Small utilities */
+  .muted{color:var(--muted);font-size:13px}
+  .right{display:flex;gap:10px;align-items:center}
+  .chip{background:#f0fff3;color:#2f8f4a;padding:6px 10px;border-radius:999px;font-weight:600}
+  .small{font-size:12px;color:var(--muted)}
+
+  /* Responsive */
+  @media (max-width:1000px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .two-col{grid-template-columns:1fr}
+    .sidebar{display:none}
+  }
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .topbar input{width:120px}
+  }
+
+  /* Login modal */
+  .modal-wrap{position:fixed;inset:0;background:rgba(6,8,6,0.45);display:flex;align-items:center;justify-content:center;z-index:9999}
+  .modal{background:var(--card);padding:28px;border-radius:12px;width:420px;box-shadow:var(--panel-shadow)}
+  .help{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+
+<div id="app" class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Sidebar navigation">
+    <div class="brand">
+      <img src="logo.jpeg" alt="Trustvault" class="logo">
+      <div>
+        <h1>Trustvault</h1>
+        <p class="small">Secure Your Money, Secure Your Future.”</p>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <a href="#dashboard" class="active" data-route="dashboard">Dashboard</a>
+      <a href="#members" data-route="members">Members <span class="badge" id="members-count">0</span></a>
+      <a href="#savings" data-route="savings">Savings</a>
+      <a href="#reports" data-route="reports">Reports</a>
+      <a href="#notes" data-route="notes">Notes</a>
+      <a href="#settings" data-route="settings">Settings</a>
+      <a href="#faq" data-route="faq">FAQ</a>
+    </nav>
+
+    <div style="margin-top:16px">
+      <div class="panel" style="background:var(--surface);">
+        <div class="small">System Status</div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <div class="chip" id="status-chip">Online</div>
+          <div class="small">Last update: <span id="last-updated">just now</span></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="search">
+        <input id="global-search" placeholder="Search members or notes..." />
+      </div>
+      <div class="right">
+        <div class="small">Welcome, Admin</div>
+        <button class="btn ghost" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <!-- Dynamic content container -->
+    <div id="page-content"></div>
+  </main>
+</div>
+
+<!-- PASSWORD MODAL -->
+<div id="passwordModal" class="modal-wrap" style="display:none" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Enter Access Password</h2>
+    <p class="help">This app requires a password before accessing the dashboard.</p>
+    <div style="margin-top:12px">
+      <label for="accessPassword">Password</label>
+      <input id="accessPassword" type="password" placeholder="Enter password" />
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" id="cancelPassword">Cancel</button>
+      <button class="btn primary" id="submitPassword">Enter</button>
+    </div>
+    <p class="small" style="margin-top:8px">Default password: <strong>admin123</strong> (change in Settings)</p>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Storage keys and helpers
+   ========================= */
+const STORAGE_KEYS = {
+  MEMBERS: 'sm_members_v1',
+  SAVINGS: 'sm_savings_v1',
+  NOTES: 'sm_notes_v1',
+  SETTINGS: 'sm_settings_v1',
+  AUTH: 'sm_auth_v1'
+};
+
+function read(key, fallback){
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch(e){
+    console.error('read error', e);
+    return fallback;
+  }
+}
+
+function write(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+/* ===== Default initial data ===== */
+const DEFAULTS = {
+  settings: {
+    password: 'admin123',
+    minDaily: 50,
+    target: 100000,
+    estimatedDays: 365,
+    autoConfirm: true
+  },
+  members: [
+    // sample member (commented out by default)
+  ],
+  savings: [
+    // Each saving: {id, memberId, amount, date (ISO), status: 'pending'|'confirmed'}
+  ],
+  notes: ''
+};
+
+/* ===== Authentication gate handling ===== */
+let isUnlocked = false;
+function requireAuthIfNeeded(){
+  const auth = read(STORAGE_KEYS.AUTH, {unlocked:false});
+  if(!auth.unlocked){
+    document.getElementById('passwordModal').style.display = 'flex';
+  } else {
+    isUnlocked = true;
+    routeLoad();
+  }
+}
+
+document.getElementById('cancelPassword').addEventListener('click', ()=> {
+  location.reload();
+});
+
+document.getElementById('submitPassword').addEventListener('click', ()=> {
+  const pw = document.getElementById('accessPassword').value || '';
+  const settings = read(STORAGE_KEYS.SETTINGS, DEFAULTS.settings);
+  if(pw === settings.password){
+    write(STORAGE_KEYS.AUTH, {unlocked:true});
+    isUnlocked = true;
+    document.getElementById('passwordModal').style.display = 'none';
+    routeLoad();
+  } else {
+    alert('Incorrect password.');
+  }
+});
+
+/* ===== Navigation & routing ===== */
+const routes = {
+  dashboard: renderDashboard,
+  members: renderMembers,
+  savings: renderSavings,
+  reports: renderReports,
+  notes: renderNotes,
+  settings: renderSettings,
+  faq: renderFAQ
+};
+
+function setActiveNav(route){
+  document.querySelectorAll('#nav a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.route === route);
+  });
+}
+
+function routeLoad(){
+  const hash = location.hash.replace('#','') || 'dashboard';
+  setActiveNav(hash);
+  const fn = routes[hash] || renderDashboard;
+  fn();
+}
+
+/* listen to hash change */
+window.addEventListener('hashchange', routeLoad);
+
+/* Logout button */
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify({unlocked:false}));
+  isUnlocked = false;
+  document.getElementById('passwordModal').style.display = 'flex';
+});
+
+/* ---------- Data utilities ---------- */
+function ensureInitialData(){
+  const s = read(STORAGE_KEYS.SETTINGS, null);
+  if(!s) write(STORAGE_KEYS.SETTINGS, DEFAULTS.settings);
+  const m = read(STORAGE_KEYS.MEMBERS, null);
+  if(!m) write(STORAGE_KEYS.MEMBERS, []);
+  const sa = read(STORAGE_KEYS.SAVINGS, null);
+  if(!sa) write(STORAGE_KEYS.SAVINGS, []);
+  const n = read(STORAGE_KEYS.NOTES, null);
+  if(n === null) write(STORAGE_KEYS.NOTES, '');
+}
+ensureInitialData();
+
+/* ----- Helpers for IDs ----- */
+function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+
+/* ---------- Aggregation/Reports: weekly sums ---------- */
+/**
+ * Builds weekly bins from daily savings and returns sorted bins for last N weeks.
+ * Week definition: Monday-Sunday. Returns array of {weekStartISO, weekLabel, total}
+ */
+function weeklyAggregation(daysBack = 12 * 7){ // default: last 12 weeks
+  const savings = read(STORAGE_KEYS.SAVINGS, []);
+  // parse date to midnight for each saving
+  const sums = {};
+  function weekStartISO(date){
+    const d = new Date(date);
+    // set to Monday
+    const day = (d.getDay() + 6) % 7; // Monday=0
+    d.setDate(d.getDate() - day);
+    d.setHours(0,0,0,0);
+    return d.toISOString().slice(0,10);
+  }
+  savings.forEach(s => {
+    const iso = weekStartISO(s.date);
+    sums[iso] = (sums[iso] || 0) + Number(s.amount || 0);
+  });
+  // Build sorted array of week keys descending
+  const keys = Object.keys(sums).sort();
+  return keys.map(k => ({weekStartISO:k, total:sums[k], weekLabel: k}));
+}
+
+/* ---------- Weekly histogram drawing ---------- */
+let histogramChart = null;
+function drawHistogram(canvasId='histogramCanvas', weeks=12){
+  // compute last N week start dates (Monday)
+  const now = new Date();
+  const day = (now.getDay() + 6) % 7; // Monday=0
+  const currentMonday = new Date(now);
+  currentMonday.setDate(now.getDate() - day);
+  currentMonday.setHours(0,0,0,0);
+  // build weeks array
+  const weeksArr = [];
+  for(let i=weeks-1;i>=0;i--){
+    const d = new Date(currentMonday);
+    d.setDate(currentMonday.getDate() - i*7);
+    weeksArr.push(d.toISOString().slice(0,10));
+  }
+  // aggregate savings into these weeks
+  const weekly = weeklyAggregation(weeks*7);
+  const lookup = weekly.reduce((acc,w)=>{ acc[w.weekStartISO]=w.total; return acc; }, {});
+  const values = weeksArr.map(k => lookup[k] || 0);
+  const labels = weeksArr.map(k => {
+    const d = new Date(k);
+    const end = new Date(d); end.setDate(d.getDate()+6);
+    return `${d.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+  });
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if(histogramChart) histogramChart.destroy();
+  histogramChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Weekly Savings (KES)',
+        data: values,
+        borderRadius:6,
+        barThickness: 22
+      }]
+    },
+    options: {
+      responsive:true,
+      plugins: {
+        legend: {display:false}
+      },
+      scales: {
+        x: { ticks: {display:true}, grid:{display:false} },
+        y: { beginAtZero:true, ticks: {callback: v => 'KES ' + v} }
+      }
+    }
+  });
+}
+
+/* ---------- Dashboard rendering ---------- */
+function renderDashboard(){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  const savings = read(STORAGE_KEYS.SAVINGS, []);
+  const activeMembers = new Set(savings.map(s=>s.memberId));
+  const totalSavings = savings.reduce((a,b)=>a + Number(b.amount || 0), 0);
+  const pendingSavings = savings.filter(s=>s.status==='pending').reduce((a,b)=>a+Number(b.amount||0), 0);
+
+  const html = `
+    <div class="grid">
+      <div class="card">
+        <h3>Number of Members</h3>
+        <div class="value">${members.length}</div>
+        <div class="small">Active this period: ${activeMembers.size}</div>
+      </div>
+      <div class="card">
+        <h3>Total Savings</h3>
+        <div class="value">KES ${formatNumber(totalSavings)}</div>
+        <div class="small">Target: KES ${formatNumber(read(STORAGE_KEYS.SETTINGS).target || 0)}</div>
+      </div>
+      <div class="card">
+        <h3>Pending Savings</h3>
+        <div class="value">KES ${formatNumber(pendingSavings)}</div>
+        <div class="small">Unconfirmed contributions</div>
+      </div>
+      <div class="card">
+        <h3>Active Members</h3>
+        <div class="value">${activeMembers.size}</div>
+        <div class="small">Members who saved at least once</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="margin:0">Savings Progress (weekly)</h3>
+            <div class="small">Auto-updates as daily savings are added</div>
+          </div>
+          <canvas id="histogramCanvas" height="160"></canvas>
+        </div>
+
+        <div style="display:flex;gap:18px;margin-top:18px">
+          <div class="panel" style="flex:1">
+            <h3 style="margin-top:0">Weekly Summary</h3>
+            <div id="weeklySummary" class="small">Loading...</div>
+          </div>
+
+          <div class="panel" style="width:260px">
+            <h3 style="margin-top:0">Alerts</h3>
+            <div id="alertsList" class="small"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h3 style="margin-top:0">Top Contributors (This Month)</h3>
+          <div id="topContributors" class="small">Loading...</div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h3 style="margin-top:0">Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <button class="btn primary" id="btnAddSavingDash">Add Saving</button>
+            <button class="btn ghost" onclick="location.hash='#members'">Manage Members</button>
+            <button class="btn" id="btnExportCSV">Export CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('page-content').innerHTML = html;
+
+  // draw histogram
+  drawHistogram('histogramCanvas', 12);
+
+  // populate weekly summary
+  const weekly = weeklyAggregation(12*7).slice(-12); // last 12 weeks
+  const weeklySummaryEl = document.getElementById('weeklySummary');
+  if(weekly.length === 0) weeklySummaryEl.innerText = 'No savings yet.';
+  else {
+    weeklySummaryEl.innerHTML = weekly.slice(-4).reverse().map(w => `<div style="margin-bottom:6px">
+      <strong>${w.weekLabel}</strong>: KES ${formatNumber(w.total)}
+    </div>`).join('');
+  }
+
+  // alerts
+  const settings = read(STORAGE_KEYS.SETTINGS);
+  const alerts = [];
+  if(totalSavings < settings.target * 0.25) alerts.push('Savings less than 25% of target.');
+  if(pendingSavings > 0) alerts.push('There are pending contributions requiring confirmation.');
+  const alertsEl = document.getElementById('alertsList');
+  alertsEl.innerHTML = alerts.length ? alerts.map(a=>`<div style="background:#fff5f5;border-radius:8px;padding:8px;margin-bottom:6px">${a}</div>`).join('') : '<div class="small">No critical alerts</div>';
+
+  // top contributors this month
+  const top = computeTopContributors(30);
+  const topEl = document.getElementById('topContributors');
+  topEl.innerHTML = top.length ? top.map(t=>`<div style="display:flex;justify-content:space-between;padding:6px 0">${t.name} <strong>KES ${formatNumber(t.amount)}</strong></div>`).join('') : '<div class="small">No contributors yet</div>';
+
+  // wire add saving quick action
+  document.getElementById('btnAddSavingDash').addEventListener('click', ()=> {
+    location.hash = '#savings';
+    setTimeout(()=>document.getElementById('savingsMemberSelect')?.focus(), 200);
+  });
+
+  document.getElementById('btnExportCSV').addEventListener('click', ()=> {
+    exportCSV();
+  });
+
+  // update sidebar counts
+  document.getElementById('members-count').innerText = read(STORAGE_KEYS.MEMBERS).length;
+}
+
+/* ---------- Members page ---------- */
+function renderMembers(){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  let html = `<div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Members</h2>
+      <button class="btn primary" id="addMemberBtn">+ Add Member</button>
+    </div>
+    <div style="margin-top:12px">
+      <table aria-label="Members table">
+        <thead><tr><th>Name</th><th>Phone/Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="membersTbody">
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  document.getElementById('page-content').innerHTML = html;
+  const tbody = document.getElementById('membersTbody');
+  if(members.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">No members yet.</td></tr>`;
+  } else {
+    tbody.innerHTML = members.map(m => `<tr data-id="${m.id}">
+      <td>${m.name}</td>
+      <td>${m.contact || ''}</td>
+      <td>${m.role || 'Member'}</td>
+      <td>${new Date(m.joined).toLocaleDateString()}</td>
+      <td>
+        <button class="btn ghost" data-action="edit">Edit</button>
+        <button class="btn" data-action="delete">Delete</button>
+      </td>
+    </tr>`).join('');
+    tbody.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const id = e.target.closest('tr').dataset.id;
+        const action = e.target.dataset.action;
+        if(action === 'edit') openMemberForm(id);
+        if(action === 'delete'){
+          if(confirm('Delete member? All their savings will remain but member will be removed.')) {
+            deleteMember(id);
+          }
+        }
+      });
+    });
+  }
+
+  document.getElementById('addMemberBtn').addEventListener('click', ()=> openMemberForm());
+  document.getElementById('members-count').innerText = members.length;
+}
+
+function openMemberForm(id){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  const existing = id ? members.find(m=>m.id===id) : null;
+  const modalHtml = `
+    <div class="panel">
+      <h3>${existing ? 'Edit' : 'Add'} Member</h3>
+      <div style="margin-top:12px">
+        <label>Name</label>
+        <input id="memberName" value="${existing?escapeHtml(existing.name):''}" />
+      </div>
+      <div style="margin-top:8px">
+        <label>Contact (phone or email)</label>
+        <input id="memberContact" value="${existing?escapeHtml(existing.contact):''}" />
+      </div>
+      <div style="margin-top:8px">
+        <label>Role</label>
+        <select id="memberRole">
+          <option ${existing && existing.role==='Admin'?'selected':''}>Admin</option>
+          <option ${existing && existing.role==='Member'?'selected':''}>Member</option>
+        </select>
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" id="cancelMember">Cancel</button>
+        <button class="btn primary" id="saveMember">${existing ? 'Save' : 'Add'}</button>
+      </div>
+    </div>
+  `;
+  // inject into page content as overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-wrap';
+  overlay.innerHTML = `<div class="modal">${modalHtml}</div>`;
+  document.body.appendChild(overlay);
+
+  document.getElementById('cancelMember').addEventListener('click', ()=> overlay.remove());
+  document.getElementById('saveMember').addEventListener('click', ()=>{
+    const name = document.getElementById('memberName').value.trim();
+    const contact = document.getElementById('memberContact').value.trim();
+    const role = document.getElementById('memberRole').value;
+    if(!name) return alert('Name required');
+    const members = read(STORAGE_KEYS.MEMBERS, []);
+    if(existing){
+      existing.name = name; existing.contact = contact; existing.role = role;
+      write(STORAGE_KEYS.MEMBERS, members);
+    } else {
+      members.push({id: uid('m'), name, contact, role, joined: new Date().toISOString()});
+      write(STORAGE_KEYS.MEMBERS, members);
+    }
+    overlay.remove();
+    renderMembers();
+  });
+}
+
+function deleteMember(id){
+  let members = read(STORAGE_KEYS.MEMBERS, []);
+  members = members.filter(m=>m.id!==id);
+  write(STORAGE_KEYS.MEMBERS, members);
+  renderMembers();
+}
+
+/* ---------- Savings page ---------- */
+function renderSavings(){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  const savings = read(STORAGE_KEYS.SAVINGS, []);
+  // build page
+  const html = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Savings</h2>
+        <div class="small">Minimum daily savings: KES ${formatNumber(read(STORAGE_KEYS.SETTINGS).minDaily)}</div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:flex-end">
+        <div style="flex:1">
+          <label>Member</label>
+          <select id="savingsMemberSelect">${members.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}</select>
+        </div>
+        <div style="width:160px">
+          <label>Amount (KES)</label>
+          <input id="savingsAmount" type="number" min="0" value="0" />
+        </div>
+        <div style="width:180px">
+          <label>Date</label>
+          <input id="savingsDate" type="date" value="${(new Date()).toISOString().slice(0,10)}" />
+        </div>
+        <div>
+          <button class="btn primary" id="addSavingBtn">Add</button>
+        </div>
+      </div>
+
+      <div style="margin-top:18px">
+        <table>
+          <thead><tr><th>Member</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="savingsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('page-content').innerHTML = html;
+  refreshSavingsTable();
+
+  document.getElementById('addSavingBtn').addEventListener('click', ()=>{
+    const memberId = document.getElementById('savingsMemberSelect').value;
+    const amount = Number(document.getElementById('savingsAmount').value || 0);
+    const date = document.getElementById('savingsDate').value;
+    const settings = read(STORAGE_KEYS.SETTINGS);
+    if(amount <= 0) return alert('Enter amount > 0');
+    if(amount < settings.minDaily) {
+      if(!confirm(`Amount is below the minimum daily savings (KES ${settings.minDaily}). Add anyway?`)) return;
+    }
+    const newSave = {
+      id: uid('s'),
+      memberId,
+      amount,
+      date: new Date(date + 'T00:00:00').toISOString(),
+      status: 'pending'
+    };
+    const arr = read(STORAGE_KEYS.SAVINGS, []);
+    arr.push(newSave);
+    write(STORAGE_KEYS.SAVINGS, arr);
+    refreshSavingsTable();
+    // update dashboard elements
+    if(location.hash === '#dashboard' || location.hash === ''){
+      renderDashboard();
+    }
+  });
+}
+
+function refreshSavingsTable(){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  const savings = read(STORAGE_KEYS.SAVINGS, []);
+  const tbody = document.getElementById('savingsTbody');
+  if(!tbody) return;
+  if(savings.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">No savings recorded yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = savings.sort((a,b)=> new Date(b.date)-new Date(a.date)).map(s=>{
+    const m = members.find(mm=>mm.id===s.memberId) || {name:'(deleted)'};
+    return `<tr data-id="${s.id}">
+      <td>${m.name}</td>
+      <td>KES ${formatNumber(s.amount)}</td>
+      <td>${new Date(s.date).toLocaleDateString()}</td>
+      <td>${s.status === 'pending' ? '<span class="small" style="color:#b36d00">Pending</span>' : '<span class="small" style="color:#2f8f4a">Confirmed</span>'}</td>
+      <td>
+        ${s.status === 'pending' ? `<button class="btn ghost" data-action="confirm">Confirm</button>` : ''}
+        <button class="btn" data-action="delete">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', (e)=>{
+      const action = e.target.dataset.action;
+      const id = e.target.closest('tr').dataset.id;
+      if(action === 'confirm') confirmSaving(id);
+      if(action === 'delete') {
+        if(confirm('Delete saving entry?')) deleteSaving(id);
+      }
+    });
+  });
+}
+
+function confirmSaving(id){
+  const arr = read(STORAGE_KEYS.SAVINGS, []);
+  const s = arr.find(x=>x.id===id);
+  if(!s) return;
+  s.status = 'confirmed';
+  write(STORAGE_KEYS.SAVINGS, arr);
+  refreshSavingsTable();
+  renderDashboard(); // update dashboard
+}
+
+function deleteSaving(id){
+  let arr = read(STORAGE_KEYS.SAVINGS, []);
+  arr = arr.filter(s=>s.id!==id);
+  write(STORAGE_KEYS.SAVINGS, arr);
+  refreshSavingsTable();
+  renderDashboard();
+}
+
+/* ---------- Reports page ---------- */
+function renderReports(){
+  const html = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Reports</h2>
+        <div>
+          <button class="btn ghost" id="exportReportBtn">Export CSV</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
+        <label>Show</label>
+        <select id="reportsRange">
+          <option value="4">Last 4 weeks</option>
+          <option value="12" selected>Last 12 weeks</option>
+          <option value="24">Last 24 weeks</option>
+        </select>
+        <label>or</label>
+        <select id="reportsMode">
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px">
+        <canvas id="reportsCanvas" height="160"></canvas>
+      </div>
+    </div>
+  `;
+  document.getElementById('page-content').innerHTML = html;
+
+  const render = ()=>{
+    const weeks = Number(document.getElementById('reportsRange').value);
+    // For monthly: we will group by YYYY-MM
+    const mode = document.getElementById('reportsMode').value;
+    if(mode === 'weekly') {
+      drawHistogram('reportsCanvas', weeks);
+    } else {
+      // simple monthly aggregation
+      const savings = read(STORAGE_KEYS.SAVINGS, []);
+      const lookup = {};
+      savings.forEach(s => {
+        const d = new Date(s.date);
+        const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+        lookup[key] = (lookup[key] || 0) + Number(s.amount || 0);
+      });
+      const keys = Object.keys(lookup).sort();
+      const labels = keys.slice(-12); // last 12 months
+      const data = labels.map(k=>lookup[k]||0);
+      const ctx = document.getElementById('reportsCanvas').getContext('2d');
+      if(window.reportChart) window.reportChart.destroy();
+      window.reportChart = new Chart(ctx, {
+        type:'bar',
+        data:{labels,data: [{ label:'Monthly', data}]},
+        options:{responsive:true,plugins:{legend:{display:false}}}
+      });
+    }
+  };
+
+  document.getElementById('reportsRange').addEventListener('change', render);
+  document.getElementById('reportsMode').addEventListener('change', render);
+  document.getElementById('exportReportBtn').addEventListener('click', exportCSV);
+  render();
+}
+
+/* ---------- Notes ---------- */
+function renderNotes(){
+  const notes = read(STORAGE_KEYS.NOTES, '');
+  const html = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Notes</h2>
+        <div>
+          <button class="btn ghost" id="clearNotes">Clear</button>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <textarea id="notesArea">${escapeHtml(notes)}</textarea>
+      </div>
+      <div style="margin-top:8px;display:flex;justify-content:flex-end">
+        <button class="btn primary" id="saveNotesBtn">Save Notes</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('page-content').innerHTML = html;
+  document.getElementById('saveNotesBtn').addEventListener('click', ()=>{
+    const v = document.getElementById('notesArea').value;
+    write(STORAGE_KEYS.NOTES, v);
+    alert('Notes saved');
+  });
+  document.getElementById('clearNotes').addEventListener('click', ()=>{
+    if(confirm('Clear notes?')){
+      document.getElementById('notesArea').value = '';
+      write(STORAGE_KEYS.NOTES, '');
+    }
+  });
+}
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  const settings = read(STORAGE_KEYS.SETTINGS, DEFAULTS.settings);
+  const html = `
+    <div class="panel">
+      <h2 style="margin:0">System Configuration & Settings</h2>
+      <p class="small">Manage saving targets, minimums and system access</p>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
+        <div class="card">
+          <div class="small">System Status</div>
+          <div class="value" style="color:var(--accent)">Online</div>
+          <div class="muted">Last updated: <span id="settingsUpdate">just now</span></div>
+        </div>
+        <div class="card">
+          <div class="small">Active Users</div>
+          <div class="value">${read(STORAGE_KEYS.MEMBERS, []).length}</div>
+          <div class="muted">Members on file</div>
+        </div>
+        <div class="card">
+          <div class="small">Storage used</div>
+          <div class="value">--</div>
+          <div class="muted">LocalStorage</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="panel">
+        <h3 style="margin-top:0">Target Settings</h3>
+        <div class="form-row">
+          <div style="flex:1">
+            <label>Total target (KES)</label>
+            <input id="setTarget" type="number" value="${settings.target || 0}" />
+          </div>
+          <div style="width:220px">
+            <label>Estimated days to target</label>
+            <input id="setEstDays" type="number" value="${settings.estimatedDays || 0}" />
+          </div>
+          <div style="width:180px">
+            <label>Min daily savings (KES)</label>
+            <input id="setMinDaily" type="number" value="${settings.minDaily || 0}" />
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="panel">
+        <h3 style="margin-top:0">Access & Security</h3>
+        <div class="form-row">
+          <div style="flex:1">
+            <label>Access password</label>
+            <input id="setPassword" type="password" value="${settings.password || ''}" />
+          </div>
+          <div style="width:160px">
+            <label>Auto-confirm savings</label>
+            <select id="setAutoConfirm"><option ${settings.autoConfirm?'selected':''}>true</option><option ${!settings.autoConfirm?'selected':''}>false</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button class="btn" id="resetAppBtn">Reset Data</button>
+        <button class="btn primary" id="saveSettingsBtn">Save Settings</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('page-content').innerHTML = html;
+  document.getElementById('saveSettingsBtn').addEventListener('click', ()=>{
+    const target = Number(document.getElementById('setTarget').value || 0);
+    const estDays = Number(document.getElementById('setEstDays').value || 0);
+    const minDaily = Number(document.getElementById('setMinDaily').value || 0);
+    const pass = document.getElementById('setPassword').value || 'admin123';
+    const autoConfirm = document.getElementById('setAutoConfirm').value === 'true';
+    const s = {password:pass, minDaily, target, estimatedDays:estDays, autoConfirm};
+    write(STORAGE_KEYS.SETTINGS, s);
+    alert('Settings saved. Note: Password updated requires reloading to take effect for locked sessions.');
+    renderSettings();
+  });
+
+  document.getElementById('resetAppBtn').addEventListener('click', ()=>{
+    if(!confirm('Reset all members, savings and notes? This cannot be undone.')) return;
+    write(STORAGE_KEYS.MEMBERS, []);
+    write(STORAGE_KEYS.SAVINGS, []);
+    write(STORAGE_KEYS.NOTES, '');
+    write(STORAGE_KEYS.SETTINGS, DEFAULTS.settings);
+    alert('App reset to defaults');
+    renderSettings();
+  });
+}
+
+/* ---------- FAQ ---------- */
+function renderFAQ(){
+  const faqs = [
+    {q:'How do I add a member?', a:'Go to Members and click Add Member.'},
+    {q:'How do I record a daily saving?', a:'Go to Savings, select member, amount and date then Add.'},
+    {q:'How is weekly data calculated?', a:'Weeks are Monday-Sunday and totals are sum of daily savings.'},
+    {q:'How to change password?', a:'Go to Settings -> Access & Security and update the access password.'}
+  ];
+  const html = `<div class="panel"><h2>FAQ</h2><div style="margin-top:12px">${faqs.map(f=>`<div style="margin-bottom:12px"><strong>${f.q}</strong><div class="small">${f.a}</div></div>`).join('')}</div></div>`;
+  document.getElementById('page-content').innerHTML = html;
+}
+
+/* ---------- Utility functions ---------- */
+function formatNumber(n){ return Number(n || 0).toLocaleString(); }
+function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]}); }
+
+function computeTopContributors(days=30){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  const savings = read(STORAGE_KEYS.SAVINGS, []);
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+  const map = {};
+  savings.forEach(s=>{
+    const d = new Date(s.date);
+    if(d >= cutoff){
+      map[s.memberId] = (map[s.memberId]||0) + Number(s.amount || 0);
+    }
+  });
+  const arr = Object.keys(map).map(id=>{
+    const m = members.find(x=>x.id===id) || {name:'(deleted)'};
+    return {id, name: m.name, amount: map[id]};
+  }).sort((a,b)=>b.amount - a.amount).slice(0,5);
+  return arr;
+}
+
+/* ---------- Export CSV (simple) ---------- */
+function exportCSV(){
+  const members = read(STORAGE_KEYS.MEMBERS, []);
+  const savings = read(STORAGE_KEYS.SAVINGS, []);
+  const lines = ['memberName,memberContact,amount,date,status'];
+  savings.forEach(s=>{
+    const m = members.find(mm=>mm.id===s.memberId) || {name:'(deleted)',contact:''};
+    lines.push(`"${m.name.replace(/"/g,'""')}","${(m.contact||'').replace(/"/g,'""')}",${s.amount},${s.date},${s.status}`);
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'savings_export.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- Small glue & startup ---------- */
+function refreshGlobal(){
+  // update last updated stamp
+  document.getElementById('last-updated').innerText = 'just now';
+  document.getElementById('settingsUpdate').innerText = 'just now';
+  // update members count
+  document.getElementById('members-count').innerText = read(STORAGE_KEYS.MEMBERS).length;
+}
+
+/* compute top level data periodically (auto refresh) */
+setInterval(()=>{
+  if(isUnlocked){
+    // refresh current route content if it's dashboard to keep chart in sync
+    if(location.hash === '' || location.hash === '#dashboard') renderDashboard();
+    refreshGlobal();
+  }
+}, 10_000);
+
+/* Load initial route after auth */
+requireAuthIfNeeded();
+
+/* If user navigates while locked, ensure modal appears */
+window.addEventListener('hashchange', ()=> {
+  if(!read(STORAGE_KEYS.AUTH, {unlocked:false}).unlocked){
+    document.getElementById('passwordModal').style.display = 'flex';
+  }
+});
+
+/* Helper: compute savings table when entries changed in other tabs */
+window.addEventListener('storage', e=>{
+  if(!isUnlocked) return;
+  // if savings/members change in another tab, refresh UI
+  if([STORAGE_KEYS.SAVINGS, STORAGE_KEYS.MEMBERS, STORAGE_KEYS.SETTINGS].includes(e.key)){
+    routeLoad();
+  }
+});
+
+/* Initial helper functions required earlier but declared late */
+function computeWeeklyTotals(){ return weeklyAggregation(12*7); }
+function formatCurrency(n){ return 'KES ' + formatNumber(n); }
+function renderReports() {
+  const html = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Reports</h2>
+        <div>
+          <button class="btn ghost" id="exportReportBtn">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="panel-reports-controls">
+        <label>Show</label>
+        <select id="reportsRange">
+          <option value="7">Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+
+      <canvas id="reportsCanvas"></canvas>
+    </div>
+  `;
+  document.getElementById('page-content').innerHTML = html;
+
+  function drawDailyReport(days=30) {
+    const savings = read(STORAGE_KEYS.SAVINGS, []);
+    // Get last N days
+    const today = new Date();
+    const daysArr = [];
+    for(let i=days-1;i>=0;i--){
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      daysArr.push(d.toISOString().slice(0,10));
+    }
+    // Aggregate savings per day
+    const lookup = {};
+    savings.forEach(s => {
+      const iso = new Date(s.date).toISOString().slice(0,10);
+      lookup[iso] = (lookup[iso] || 0) + Number(s.amount || 0);
+    });
+    const values = daysArr.map(k => lookup[k] || 0);
+    const labels = daysArr.map(k => {
+      const d = new Date(k);
+      return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    });
+    const ctx = document.getElementById('reportsCanvas').getContext('2d');
+    if(window.reportChart) window.reportChart.destroy();
+    window.reportChart = new Chart(ctx, {
+      type:'bar',
+      data:{ labels, datasets: [{ label:'Daily Savings (KES)', data: values, borderRadius:6, barThickness: 18 }] },
+      options:{
+        responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{display:true}, grid:{display:false}},
+          y:{beginAtZero:true, ticks:{callback:v=>'KES '+v}}
+        }
+      }
+    });
+  }
+
+  const render = ()=>{
+    const days = Number(document.getElementById('reportsRange').value);
+    drawDailyReport(days);
+  };
+
+  document.getElementById('reportsRange').addEventListener('change', render);
+  document.getElementById('exportReportBtn').addEventListener('click', exportCSV);
+  render();
+}
+
+/* End of script */
+</script>
+</body>
+</html>
